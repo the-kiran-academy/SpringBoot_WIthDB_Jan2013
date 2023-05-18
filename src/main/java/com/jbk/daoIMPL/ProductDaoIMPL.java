@@ -7,6 +7,9 @@ import javax.persistence.PersistenceException;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import com.jbk.dao.ProductDao;
@@ -92,26 +95,94 @@ public class ProductDaoIMPL implements ProductDao {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			if (session != null) {
+				session.close();
+			}
 		}
 		return isDeleted;
 	}
 
 	@Override
 	public Boolean updateProduct(Product product) {
-
-		return null;
+		Session session = null;
+		Boolean isUpdated = false;
+		try {
+			session = factory.openSession();
+			session.update(product);
+			session.beginTransaction().commit();
+			isUpdated = true;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return isUpdated;
 	}
 
 	@Override
-	public List<Product> sortProducts(String sortBy, String fielsName) {
+	public List<Product> sortProducts(String sortBy, String fieldName) {
+		Session session = null;
+		List<Product> list = null;
+		try {
+			session = factory.openSession();
+			Criteria criteria = session.createCriteria(Product.class);
 
-		return null;
+			if (sortBy.equalsIgnoreCase("asc")) {
+				criteria.addOrder(Order.asc(fieldName));
+			} else {
+				criteria.addOrder(Order.desc(fieldName));
+			}
+
+			list = criteria.list();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+
+		return list;
+	}
+
+	public Double getMaxPrice() {
+		Double maxPrice = 0d;
+		Session session = factory.openSession();
+		Criteria criteria = session.createCriteria(Product.class);
+		criteria.setProjection(Projections.max("productPrice"));
+		List list = criteria.list();
+		if (!list.isEmpty()) {
+			maxPrice = (Double) list.get(0);
+		}
+		return maxPrice;
+
 	}
 
 	@Override
-	public Product getMaxPriceProducts() {
+	public List<Product> getMaxPriceProducts() {
+		Session session = null;
+		List<Product> products = null;
+		try {
+			Double maxPrice = getMaxPrice();
+			if (maxPrice > 0) {
+				session = factory.openSession();
+				Criteria criteria = session.createCriteria(Product.class);
+				criteria.add(Restrictions.eq("productPrice", maxPrice));
+				products = criteria.list();
+			}
 
-		return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return products;
 	}
 
 	@Override
@@ -124,6 +195,24 @@ public class ProductDaoIMPL implements ProductDao {
 	public Integer getTotalCountOfProducts() {
 
 		return null;
+	}
+
+	@Override
+	public String uploadProducts(List<Product> list) {
+		String msg = null;
+		int addCount = 0;
+		int excludeCount = 0;
+
+		for (Product product : list) {
+			Boolean isAdded = addProduct(product);
+			if (isAdded) {
+				addCount = addCount + 1;
+			} else {
+				excludeCount = excludeCount + 1;
+			}
+		}
+		msg = "Added count= " + addCount + " & Exclude count= " + excludeCount;
+		return msg;
 	}
 
 }

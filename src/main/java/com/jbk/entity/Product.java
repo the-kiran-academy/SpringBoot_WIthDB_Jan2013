@@ -9,6 +9,13 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+
+import com.jbk.annotation.AlphaNumeric;
+
 
 @Entity
 public class Product {
@@ -17,6 +24,8 @@ public class Product {
 	@Column(nullable = false,unique = true)
 	private Long productId;
 	
+	@NotEmpty
+	@AlphaNumeric
 	@Column(nullable = false,unique = true)
 	private String productName;
 	
@@ -28,9 +37,11 @@ public class Product {
 	@JoinColumn(name = "categoryid")
 	private Category categoryId;
 	
+	@Min(1)
 	@Column(nullable = false)
 	private int productQTY;
 	
+	@Min(1)
 	@Column(nullable = false)
 	private Double productPrice;
 	
@@ -95,6 +106,12 @@ public class Product {
 
 	public void setProductPrice(Double productPrice) {
 		this.productPrice = productPrice;
+	}
+
+	@Override
+	public String toString() {
+		return "Product [productId=" + productId + ", productName=" + productName + ", supplierId=" + supplierId
+				+ ", categoryId=" + categoryId + ", productQTY=" + productQTY + ", productPrice=" + productPrice + "]";
 	}
 	
 	

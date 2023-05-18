@@ -11,7 +11,8 @@ public interface ProductDao {
 	public Boolean deleteProduct(Long id);
 	public Boolean updateProduct(Product product);
 	public List<Product> sortProducts(String sortBy,String fielsName);
-	public Product getMaxPriceProducts();
+	public List<Product> getMaxPriceProducts();
 	public Double countSumOfProductPrice();
 	public Integer getTotalCountOfProducts();
+	public String uploadProducts(List<Product> list);
 }
