@@ -2,12 +2,14 @@ package com.jbk.serviceImpl;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -16,7 +18,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,15 +27,18 @@ import com.jbk.entity.Category;
 import com.jbk.entity.Product;
 import com.jbk.entity.Supplier;
 import com.jbk.service.ProductService;
+import com.jbk.validation.ValidateObject;
 
 @Service
 public class ProductServiceIMPL implements ProductService {
 
 	@Autowired
 	private ProductDao dao;
-
-	@Autowired
-	private ResourceLoader resourceLoader;
+	String excludedRows = "";
+	int totalRecordCount = 0;
+	Map<String, Object> map = new HashMap<String, Object>();
+	Map<String, String> validatedError = new HashMap<String, String>();
+	Map<Integer, Map<String, String>> errorMap = new HashMap<Integer, Map<String, String>>();
 
 	@Override
 	public Boolean addProduct(Product product) {
@@ -94,7 +98,7 @@ public class ProductServiceIMPL implements ProductService {
 			Workbook workbook = new XSSFWorkbook(fis);
 
 			Sheet sheet = workbook.getSheet("product");
-
+			totalRecordCount = sheet.getLastRowNum();
 			Iterator<Row> rows = sheet.rowIterator();
 
 			Product product = null;
@@ -120,7 +124,15 @@ public class ProductServiceIMPL implements ProductService {
 					switch (columnIndex) {
 					case 0: {
 
-						product.setProductName(cell.getStringCellValue());
+						CellType cellType = cell.getCellType();
+
+						if (cellType == CellType.STRING) {
+							product.setProductName(cell.getStringCellValue());
+						} else if (cellType == CellType.NUMERIC) {
+							product.setProductName(String.valueOf(cell.getNumericCellValue()));
+
+						}
+
 						break;
 					}
 
@@ -151,7 +163,15 @@ public class ProductServiceIMPL implements ProductService {
 					}
 
 				}
-				list.add(product);
+				validatedError = ValidateObject.validateProduct(product);
+				if (validatedError == null || validatedError.isEmpty()) {
+					list.add(product);
+
+				} else {
+					int rowNum = row.getRowNum() + 1;
+					errorMap.put(rowNum, validatedError);
+
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -161,12 +181,12 @@ public class ProductServiceIMPL implements ProductService {
 	}
 
 	@Override
-	public String uploadRecordsFromExcel(MultipartFile file) {
+	public Map<String, Object> uploadRecordsFromExcel(MultipartFile file) {
 
 		String fileName = file.getOriginalFilename();
 		String filePath = "src/main/resources";
 		List<Product> list = new ArrayList<Product>();
-		String msg = null;
+		int[] arr;
 		try {
 			byte[] data = file.getBytes();
 			FileOutputStream fos = new FileOutputStream(new File(filePath + File.separator + fileName));
@@ -175,13 +195,19 @@ public class ProductServiceIMPL implements ProductService {
 
 			list = readExcel(filePath + File.separator + fileName);
 
-			msg = dao.uploadProducts(list);
+			arr = dao.uploadProducts(list);
+
+			map.put("Total Record In Sheet", totalRecordCount);
+			map.put("Uploaded Records In DB", arr[0]);
+			map.put("Exists Records In DB", "Total = "+arr[1]);
+			map.put("Total Excluded ", errorMap.size());
+			map.put("Bad Record Row Number", errorMap);
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		return msg;
+		return map;
 	}
 
 }

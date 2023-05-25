@@ -88,7 +88,8 @@ public class ProductDaoIMPL implements ProductDao {
 		Session session = null;
 		Boolean isDeleted = false;
 		try {
-			Product product = getProductById(id);
+			session = factory.openSession();
+			Product product = session.get(Product.class, id);
 			session.delete(product);
 			session.beginTransaction().commit();
 			isDeleted = true;
@@ -198,10 +199,10 @@ public class ProductDaoIMPL implements ProductDao {
 	}
 
 	@Override
-	public String uploadProducts(List<Product> list) {
-		String msg = null;
+	public int[] uploadProducts(List<Product> list) {
 		int addCount = 0;
 		int excludeCount = 0;
+		int[] arr = new int[2];
 
 		for (Product product : list) {
 			Boolean isAdded = addProduct(product);
@@ -211,8 +212,9 @@ public class ProductDaoIMPL implements ProductDao {
 				excludeCount = excludeCount + 1;
 			}
 		}
-		msg = "Added count= " + addCount + " & Exclude count= " + excludeCount;
-		return msg;
+		arr[0] = addCount;
+		arr[1] = excludeCount;
+		return arr;
 	}
 
 }

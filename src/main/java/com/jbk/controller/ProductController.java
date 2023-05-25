@@ -1,6 +1,7 @@
 package com.jbk.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -107,9 +108,9 @@ public class ProductController {
 	}
 
 	@PostMapping(value = "/uploadSheet")
-	public ResponseEntity<String> uploadRecordsFromExcel(@RequestParam MultipartFile file) {
-		String msg = service.uploadRecordsFromExcel(file);
-		return new ResponseEntity<String>(msg, HttpStatus.OK);
+	public ResponseEntity<Map<String, Object>> uploadRecordsFromExcel(@RequestParam MultipartFile file) {
+		Map<String, Object> map = service.uploadRecordsFromExcel(file);
+		return new ResponseEntity<Map<String, Object>>(map, HttpStatus.OK);
 
 	}
 

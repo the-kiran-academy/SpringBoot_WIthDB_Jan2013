@@ -9,7 +9,8 @@ import java.lang.annotation.Target;
 import javax.validation.Constraint;
 import javax.validation.Payload;
 import javax.validation.constraints.Pattern;
-@Pattern(regexp = "^[a-zA-Z]*$",message = "Invalid Product Name")
+//@Pattern(regexp = "^[a-zA-Z]*$",message = "Invalid Product Name")
+@Pattern(regexp = "^(?=.*[a-zA-Z])[a-zA-Z0-9]+$",message = "Invalid Product Name")
 @Constraint(validatedBy =  {})
 @Target({ElementType.FIELD,ElementType.PARAMETER,ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

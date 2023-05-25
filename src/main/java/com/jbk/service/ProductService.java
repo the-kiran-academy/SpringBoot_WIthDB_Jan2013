@@ -1,6 +1,7 @@
 package com.jbk.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,7 +20,7 @@ public interface ProductService {
 	public Integer getTotalCountOfProducts();
 	
 	
-	public String uploadRecordsFromExcel(MultipartFile file);
+	public Map<String, Object> uploadRecordsFromExcel(MultipartFile file);
 	
 	
 
