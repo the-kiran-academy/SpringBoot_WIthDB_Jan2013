@@ -34,11 +34,11 @@ public class ProductServiceIMPL implements ProductService {
 
 	@Autowired
 	private ProductDao dao;
-	String excludedRows = "";
 	int totalRecordCount = 0;
 	Map<String, Object> map = new HashMap<String, Object>();
 	Map<String, String> validatedError = new HashMap<String, String>();
 	Map<Integer, Map<String, String>> errorMap = new HashMap<Integer, Map<String, String>>();
+	List<Integer> alreadyExistrows;
 
 	@Override
 	public Boolean addProduct(Product product) {
@@ -51,6 +51,11 @@ public class ProductServiceIMPL implements ProductService {
 	@Override
 	public Product getProductById(Long id) {
 		return dao.getProductById(id);
+	}
+
+	@Override
+	public Product getProductByName(String getProductByName) {
+		return dao.getProductByName(getProductByName);
 	}
 
 	@Override
@@ -91,6 +96,9 @@ public class ProductServiceIMPL implements ProductService {
 	}
 
 	private List<Product> readExcel(String filePath) {
+		alreadyExistrows = new ArrayList<Integer>();
+		;
+		alreadyExistrows.clear();
 		List<Product> list = new ArrayList<Product>();
 		try {
 			FileInputStream fis = new FileInputStream(new File(filePath));
@@ -165,7 +173,13 @@ public class ProductServiceIMPL implements ProductService {
 				}
 				validatedError = ValidateObject.validateProduct(product);
 				if (validatedError == null || validatedError.isEmpty()) {
-					list.add(product);
+
+					Product dbProduct = getProductByName(product.getProductName());
+					if (dbProduct == null) {
+						list.add(product);
+					} else {
+						alreadyExistrows.add(row.getRowNum()+1);
+					}
 
 				} else {
 					int rowNum = row.getRowNum() + 1;
@@ -199,7 +213,8 @@ public class ProductServiceIMPL implements ProductService {
 
 			map.put("Total Record In Sheet", totalRecordCount);
 			map.put("Uploaded Records In DB", arr[0]);
-			map.put("Exists Records In DB", "Total = "+arr[1]);
+			map.put("Total Exists Records In DB", alreadyExistrows.size());
+			map.put("Row Num,Exists Records In DB", alreadyExistrows);
 			map.put("Total Excluded ", errorMap.size());
 			map.put("Bad Record Row Number", errorMap);
 

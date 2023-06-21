@@ -1,5 +1,6 @@
 package com.jbk.daoIMPL;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.PersistenceException;
@@ -45,6 +46,25 @@ public class ProductDaoIMPL implements ProductDao {
 		}
 
 		return isAdded;
+	}
+
+	@Override
+	public Product getProductByName(String productName) {
+		Session session = null;
+		Product product = null;
+		try {
+			session = factory.openSession();
+			Criteria criteria = session.createCriteria(Product.class);
+			criteria.add(Restrictions.eq("productName", productName));
+			product = (Product) criteria.uniqueResult();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (session != null) {
+				session.close();
+			}
+		}
+		return product;
 	}
 
 	@Override
@@ -214,6 +234,7 @@ public class ProductDaoIMPL implements ProductDao {
 		}
 		arr[0] = addCount;
 		arr[1] = excludeCount;
+
 		return arr;
 	}
 
